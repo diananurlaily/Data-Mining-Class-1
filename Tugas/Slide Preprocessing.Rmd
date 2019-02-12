@@ -1,0 +1,275 @@
+---
+title: "Data Preprocessing with R"
+author: "Mawanda Almuhayar (06211750010019)"
+date: "Elly Pusporani (06211750010023)"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Import Data
+### **Set Workspace Location and Data Folder**
+Workspace Location is the location where the files needed to run this syntax was saved, such as data files and other. This location can be changed as you wish.
+```{r, echo=TRUE}
+setwd("F:/S2/Semester 2/Data Mining")
+data=read.csv("Auto.csv", header=T, na.strings ="?")
+```
+
+
+
+## Overview Data
+### **Memeriksa struktur dari data**
+```{r, echo=TRUE}
+str(data)
+```
+## Overview Data (Continuation)
+### **View some of the first sequence of data**
+```{r, echo=TRUE}
+head(data)
+```
+### **Attaching Variables**
+```{r, echo=TRUE}
+attach(data)
+```
+
+
+
+
+## Data Cleaning
+### **Data Cleaning includes :**
+1. Handle or Fill in the Missing Value
+2. Identify Outliers
+3. Smooth Out Noisy Data (Not Discussed)
+4. Correct Inconsistent Data (Not Discussed)
+
+## Handle the Missing Value
+Before checking the missing value, first checked the size of the data such as how many rows and columns that exist in the data.
+```{r, echo=TRUE}
+dim(data)
+```
+## Handle the Missing Value (Continuation)
+Furthermore examined whether there is a missing value in the data and where is it.
+```{r, echo=TRUE}
+data[!complete.cases(data),]
+```
+## Handle the Missing Value (Continuation)
+Number of missing value of existing.
+```{r, echo=TRUE}
+missingdata = is.na(data$horsepower)
+sum(missingdata)
+```
+
+
+
+
+## Handle the Missing Value (Continuation)
+### **Ignore or Delete the Missing Value**
+Ignore or delete rows of data containing the missing value. After that check again the size of the data. After the removal of data that contains missing value, the number of rows of the data will certainly be reduced.
+```{r, echo=TRUE}
+data1 = na.omit(data)
+dim(data1)
+```
+## Handle the Missing Value (Continuation)
+### **Ignore or Delete the Missing Value (Continuation)**
+Then check again whether there is missing value or not.
+```{r, echo=TRUE}
+data1[!complete.cases(data1),]
+```
+
+
+
+## Handle the Missing Value (Continuation)
+### **Imputation Based on Mean**
+```{r, echo=TRUE, include=FALSE}
+data2 = data
+data2$horsepower
+```
+Replace missing value with the mean of each variable. After that check again whether there is missing value or not.
+```{r, echo=TRUE}
+mean(data2$horsepower, na.rm=TRUE)
+data2$horsepower[missingdata] = mean(data2$horsepower, na.rm=TRUE)
+data2[!complete.cases(data2),]
+```
+
+
+
+## Handle the Missing Value (Continuation)
+### **Imputation Based on Modeling**
+```{r, echo=TRUE, include=FALSE}
+data3 = data
+pairs(data3)
+head(data3)
+```
+Before missing value is replaced with predict value using linear model. Examined first which variable has a high correlation with variables containing missing value. Variables that have missing values are treated as response variables (Y) and other variables are treated as predictor variables (X).
+
+## Handle the Missing Value (Continuation)
+### **Imputation Based on Modeling (Continuation)**
+```{r pressure, echo=FALSE}
+{par(mfrow=c(2,2))
+plot(data3$horsepower, data3$mpg, ylab="mpg", col="red", pch=16)
+plot(data3$horsepower, data3$displacement, ylab="displacement", col="green", pch=16)
+plot(data3$horsepower, data3$weight, ylab="weight", col="blue", pch=16)
+plot(data3$horsepower, data3$acceleration, ylab="acceleration", col="purple", pch=16)}
+```
+
+## Handle the Missing Value (Continuation)
+### **Imputation Based on Modeling (Continuation)**
+```{r, echo=TRUE}
+model = lm(horsepower ~ mpg+displacement+weight+acceleration, data=data3)
+data3$horsepower[missingdata] = predict(model, newdata = data3[missingdata,])
+data3$horsepower[missingdata]
+data3[!complete.cases(data3),]
+```
+
+
+
+
+## Outlier Detection
+### **Univariate Outlier Detection**
+#### **Using Boxplot**
+```{r, echo=TRUE, include=FALSE}
+attach(data3)
+```
+```{r, echo=FALSE}
+{par(mfrow=c(1,5))
+boxplot(mpg, ylab="mpg", border="red", pch=19)
+boxplot(displacement, ylab="displacement", border="green", pch=19)
+boxplot(horsepower, ylab="horsepower", border="blue", pch=19)
+boxplot(weight, ylab="weight", border="purple", pch=19)
+boxplot(acceleration, ylab="acceleration", border="orange", pch=19)}
+```
+## Outlier Detection (Continuation)
+### **Univariate Outlier Detection (Continuation)**
+#### **Using Boxplot (Continuation)**
+Outlier data for variable 'mpg'
+```{r, echo=TRUE, include=FALSE}
+mpg_outlier = match(boxplot(mpg, ylab="mpg", border="red", pch=19)$out, mpg)
+```
+```{r, echo=TRUE}
+data[mpg_outlier,]
+```
+## Outlier Detection (Continuation)
+### **Univariate Outlier Detection (Continuation)**
+#### **Using Boxplot (Continuation)**
+Outlier data for variable 'horsepower'
+```{r, echo=TRUE, include=FALSE}
+horsepw_outlier = match(boxplot(horsepower, ylab="mpg", border="red", pch=19)$out, horsepower)
+```
+```{r, echo=TRUE}
+data[horsepw_outlier,]
+```
+## Outlier Detection (Continuation)
+### **Univariate Outlier Detection (Continuation)**
+#### **Using Boxplot (Continuation)**
+Outlier data for variable 'acceleration'
+```{r, echo=TRUE, include=FALSE}
+accel_outlier = match(boxplot(acceleration, ylab="mpg", border="red", pch=19)$out, acceleration)
+```
+```{r, echo=TRUE}
+data[accel_outlier,]
+```
+
+
+## Outlier Detection (Continuation)
+### **Univariate Outlier Detection (Continuation)**
+#### **Using Standardized Data**
+There is no outlier for variable 'mpg'
+```{r, echo=TRUE}
+std_mpg = scale(mpg); mpg[std_mpg>3]
+```
+There is no outlier for variable 'displacement'
+```{r, echo=TRUE}
+std_disp = scale(displacement); displacement[std_disp>3]
+```
+## Outlier Detection (Continuation)
+### **Univariate Outlier Detection (Continuation)**
+#### **Using Standardized Data (Continuation)**
+Outliers data for the variable 'horsepower'
+```{r, echo=TRUE}
+std_horsepw = scale(horsepower); horsepower[std_horsepw>3]
+  horsepw_outlier2 = match(horsepower[std_horsepw>3], horsepower); data[horsepw_outlier2,]
+```
+## Outlier Detection (Continuation)
+### **Univariate Outlier Detection (Continuation)**
+#### **Using Standardized Data (Continuation)**
+There is no outlier for variable 'weight'
+```{r, echo=TRUE}
+std_weight = scale(weight); weight[std_weight>3]
+```
+## Outlier Detection (Continuation)
+### **Univariate Outlier Detection (Continuation)**
+#### **Using Standardized Data (Continuation)**
+Outliers data for the variable 'acceleration'
+```{r, echo=TRUE}
+std_accel = scale(acceleration); acceleration[std_accel>3]
+  accel_outlier2 = match(acceleration[std_accel>3], acceleration); data[accel_outlier2,]
+```
+
+## Outlier Detection (Continuation)
+### **Multivariate Outlier Detection**
+#### **Using Mahalanobis Distance**
+For 5 variables (mpg, displacement, horsepower, weight, acceleration) together. Here are some of the first data from Mahalanobis Distance.
+```{r, echo=TRUE, include=FALSE}
+x <- cbind(data3$mpg, data3$displacement, data3$horsepower, data3$weight, data3$acceleration)
+stopifnot(mahalanobis(x, 0, diag(ncol(x))) == rowSums(x*x))
+Sx <- cov(x)
+D2 <- mahalanobis(x, colMeans(x), Sx)
+```
+```{r, echo=TRUE}
+jarak = D2/ncol(x); head(as.data.frame(jarak))
+```
+## Outlier Detection (Continuation)
+### **Multivariate Outlier Detection (Continuation)**
+#### **Using Mahalanobis Distance (Continuation)**
+data that outlier Multivariate is as follows:
+```{r, echo=TRUE}
+jarak_outlier = jarak[jarak>3]
+mult_outlier = match(jarak_outlier, jarak)
+data3[mult_outlier,]
+```  
+
+
+
+## Data Transformation
+### **Data Transformation includes :**
+1. Transformation with Min-Max Normalization
+2. Transformation with Z-Score Normalization
+3. Transformation with Decimal Scaling Normalization
+```{r, echo=TRUE, include=FALSE}
+data4 = data3
+```
+## Normalization
+### **Min-Max Normalization**
+```{r, echo=TRUE}
+normalized = function(x)
+{
+  num1 = x - min(x)
+  denum1 = max(x) - min(x)
+  return(num1/denum1)
+}
+x_norm = as.data.frame(lapply(data4[c(1,3,4,5,6)], normalized)); head(x_norm)
+```
+## Normalization (Continuation)
+### **Z-Score Normalization**
+```{r, echo=TRUE}
+standardized = function(x)
+{
+  num2 = x - mean(x)
+  denum2 = sd(x)
+  return(num2/denum2)
+}
+x_standard = as.data.frame(lapply(data4[c(1,3,4,5,6)], standardized)); head(x_standard)
+```
+## Normalization (Continuation)
+### **Normalization by Decimal Scaling**
+```{r, echo=TRUE}
+decimalized = function(x)
+{
+  num3 = x
+  denum3 = 10^nchar(round(max(x)))
+  return(num3/denum3)
+}
+x_decim = as.data.frame(lapply(data4[c(1,3,4,5,6)], decimalized)); head(x_decim)
+```
